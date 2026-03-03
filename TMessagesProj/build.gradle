@@ -246,18 +246,23 @@ task checkVisibility {
 }
 
 preBuild.dependsOn checkVisibility
-task validateStringsXml {
+task validateValuesXml {
     doLast {
-        def stringsFile = file('src/main/res/values/strings.xml')
-        if (!stringsFile.exists()) {
-            throw new GradleException("Missing resource file: ${stringsFile}")
+        def valuesDirs = fileTree('src/main/res') {
+            include 'values*/**/*.xml'
         }
-        try {
-            new XmlParser(false, false).parse(stringsFile)
-        } catch (Exception e) {
-            throw new GradleException("Invalid XML in ${stringsFile}: ${e.message}", e)
+        if (valuesDirs.isEmpty()) {
+            throw new GradleException('No values XML files found under src/main/res')
+        }
+
+        valuesDirs.files.sort().each { xmlFile ->
+            try {
+                new XmlParser(false, false).parse(xmlFile)
+            } catch (Exception e) {
+                throw new GradleException("Invalid XML in ${xmlFile}: ${e.message}", e)
+            }
         }
     }
 }
 
-preBuild.dependsOn validateStringsXml
+preBuild.dependsOn validateValuesXml
