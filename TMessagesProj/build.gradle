@@ -246,3 +246,23 @@ task checkVisibility {
 }
 
 preBuild.dependsOn checkVisibility
+task validateValuesXml {
+    doLast {
+        def valuesDirs = fileTree('src/main/res') {
+            include 'values*/**/*.xml'
+        }
+        if (valuesDirs.isEmpty()) {
+            throw new GradleException('No values XML files found under src/main/res')
+        }
+
+        valuesDirs.files.sort().each { xmlFile ->
+            try {
+                new XmlParser(false, false).parse(xmlFile)
+            } catch (Exception e) {
+                throw new GradleException("Invalid XML in ${xmlFile}: ${e.message}", e)
+            }
+        }
+    }
+}
+
+preBuild.dependsOn validateValuesXml
